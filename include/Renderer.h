@@ -28,7 +28,12 @@ private:
 class Renderer
 {
 public:
-    static Renderer instance()
+    Renderer()
+    {
+        std::cout << "Hello" << std::endl;
+    }
+
+    static Renderer& instance()
     {
         static Renderer renderer;
         return renderer;
