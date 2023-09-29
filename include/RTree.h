@@ -22,13 +22,19 @@ namespace rt
      * @param component
      * @return Kümenin çevreleyici en küçük dikdörtgenini döndürür.
      */
-    Rect getBoundingBox(const Component& component);
+    Rect getBoundingBox(const Component& component)
+    {
+
+    }
 
     /**
      * @param boundingBoxes
      * @return
      */
-    Rtree createRtree(const std::vector<Rect>& boundingBoxes);
+    Rtree createRtree(const std::vector<Rect>& boundingBoxes)
+    {
+        return Rtree();
+    }
 
     /**
      * @param indexes
@@ -36,7 +42,10 @@ namespace rt
      * @param rtree
      * @param compIndex Eşleşme aranan kümenin indexi, kümenin kendisi index listesine kaydedilmemeli
      */
-    void getIntersectingRects(std::vector<unsigned>& indexes, const Rect& rect, const Rtree& rtree, unsigned compIndex);
+    void getIntersectingRects(std::vector<unsigned>& indexes, const Rect& rect, const Rtree& rtree, unsigned compIndex)
+    {
+
+    }
 }
 
 #endif //NARROWPASSAGEREMAKE_RTREE_H

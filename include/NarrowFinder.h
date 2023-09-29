@@ -9,7 +9,6 @@
 #include <opencv2/opencv.hpp>
 #include "Types.h"
 #include "Utils.h"
-#include "Renderer.h"
 #include "RTree.h"
 
 class NarrowFinder {
@@ -19,11 +18,18 @@ public:
     void calculatePassageValues();
 
 private:
+
+    void getConnectedComponents(std::vector<Component> &connectedComponents,
+                                bool componentValue = 1,
+                                int dir = 8,
+                                std::optional<std::pair<Point, Point>> mapBorder = std::nullopt);
+
     /**
-     * @brief İçine borderize edilmiş component almalı.
      * @param components Obstacle kümeleri
      */
     void foreignMatcher(const std::vector<Component>& components);
+    void foreignMatcherRect(const std::vector<Component>& components);
+    cv::Mat clusterMap(Point min, Point max);
 
     /**
      * @param component Obstacle kümesi
