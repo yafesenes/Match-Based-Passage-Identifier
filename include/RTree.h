@@ -7,6 +7,7 @@
 #include <boost/geometry/index/predicates.hpp>
 #include <boost/geometry/index/rtree.hpp>
 #include "Types.h"
+#include "TicToc.h"
 
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
@@ -14,38 +15,31 @@ namespace bgi = boost::geometry::index;
 typedef bg::model::point<int, 2, bg::cs::cartesian> RPoint;
 typedef bg::model::box<RPoint> Box;
 typedef std::pair<Box, unsigned> Value;
-typedef bgi::rtree< Value, bgi::quadratic<16> > Rtree;
+typedef bgi::rtree<Value, bgi::quadratic<16> > Rtree;
 
-namespace rt
-{
+namespace rt {
     /**
      * @param component
      * @return Kümenin çevreleyici en küçük dikdörtgenini döndürür.
      */
-    Rect getBoundingBox(const Component& component)
-    {
-
-    }
+    Rect getBoundingBox(const Component &component);
 
     /**
-     * @param boundingBoxes
+     * @param boundingBoxes Componentlerin dikdörtgen hali
      * @return
      */
-    Rtree createRtree(const std::vector<Rect>& boundingBoxes)
-    {
-        return Rtree();
-    }
+    Rtree createRtree(const std::vector<Rect> &boundingBoxes);
 
     /**
-     * @param indexes
-     * @param rect
-     * @param rtree
+     * @brief Her obstacle biriminin eşleşeceği engelleri belirlemek için uygulanan ilk filtredir
+     * @param indexes İçi doldurulacak olan değişken
+     * @param p Etrafında querybox oluşturulacak olan nokta
+     * @param rtree Kesişmeleri öngörmek için kullanılan veri yapısı
      * @param compIndex Eşleşme aranan kümenin indexi, kümenin kendisi index listesine kaydedilmemeli
+     * @param thresholdValue Querybox'ın büyüklüğünün ayarlanmasını sağlayan piksel sayısı
      */
-    void getIntersectingRects(std::vector<unsigned>& indexes, const Rect& rect, const Rtree& rtree, unsigned compIndex)
-    {
-
-    }
+    void getIntersectingRects(std::vector<unsigned> &indexes, const Point &p, const Rtree &rtree, unsigned compIndex,
+                              int thresholdValue);
 }
 
 #endif //NARROWPASSAGEREMAKE_RTREE_H
