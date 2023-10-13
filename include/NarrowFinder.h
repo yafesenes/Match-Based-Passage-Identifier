@@ -7,8 +7,6 @@
 #include <utility>
 #include <limits>
 #include <opencv2/opencv.hpp>
-#include <thread>
-#include <mutex>
 #include "Types.h"
 #include "Utils.h"
 #include "Renderer.h"
@@ -20,7 +18,7 @@ public:
     NarrowFinder(Map map, float threshold);
 
     void calculatePassageValues();
-
+    inline const PassageValues& getPassageValues() const { return _passageValues; }
 private:
     /**
      * @brief İçine borderize edilmiş component almalı.
@@ -37,12 +35,6 @@ private:
      * @brief Arasında engel bulunmayan eşleşmeleri kullanarak PassageValues hesaplar
      */
     void collisionCheck(const Point& p1, const Point& p2);
-
-    /**
-     * @param component
-     * @return İçi boşaltılmış küme döndürür
-     */
-    Component borderizeComponent(const Component& component);
 
 private:
     const int _threshold;

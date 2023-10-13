@@ -8,8 +8,6 @@
 #include <algorithm>
 #include <cmath>
 
-using namespace std;
-
 class Line : public sf::Drawable
 {
 public:
@@ -30,7 +28,6 @@ class Renderer
 public:
     Renderer()
     {
-        std::cout << "Hello" << std::endl;
     }
 
     static Renderer& instance()
@@ -39,7 +36,7 @@ public:
         return renderer;
     }
 
-    void setMap(Map &map, bool drawGrids = false)
+    void setMap(const Map &map, bool drawGrids = false)
     {
         _Map = map;
         Height = (float)map.size() / (float)map[0].size() * Width;
@@ -73,12 +70,12 @@ public:
         }
     }
 
-    void drawPoints(vector<Point> &points)
+    void drawPoints(const std::vector<Point> &points)
     {
         this->points.push_back(points);
     }
 
-    void drawMatches(PassageValues& passageValues)
+    void drawMatches(const PassageValues& passageValues)
     {
         _passageValues = passageValues;
     }
@@ -106,7 +103,7 @@ private:
 
                 else
                 {
-                    float normalizedValue = _passageValues[i][j] / min(_Map.size(),_Map[0].size());
+                    float normalizedValue = _passageValues[i][j] / std::min(_Map.size(),_Map[0].size());
                     if (normalizedValue > 1)
                         continue;
                     rect.setFillColor(getColorJet(1-normalizedValue));
@@ -195,8 +192,8 @@ private:
     bool drawGrids;
 
     Map _Map;
-    vector<Line> lines;
-    vector<vector<Point>> points;
+    std::vector<Line> lines;
+    std::vector<std::vector<Point>> points;
     PassageValues _passageValues;
 };
 

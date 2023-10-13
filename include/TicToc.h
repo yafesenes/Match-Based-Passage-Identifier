@@ -10,6 +10,11 @@
 using namespace std;
 using namespace std::chrono;
 
+// Aşağıdakı satır comment alınarak ölçme işlemi kapatılabilir!
+//#define TICTOC_DEBUG
+
+#ifdef TICTOC_DEBUG
+
 inline unordered_map<string, pair<high_resolution_clock::time_point, int>> startsMap;
 inline unordered_map<string, size_t> durationMap;
 inline unordered_map<string, int> callCountMap;
@@ -27,7 +32,6 @@ inline void tic(const string& MissionName)
         startsMap[MissionName].first = high_resolution_clock::now();
     }
 }
-    
 
 inline void toc(const string& MissionName)
 {
@@ -36,7 +40,7 @@ inline void toc(const string& MissionName)
         callCountMap[MissionName] -= 1;
         return;
     }
-    
+
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - startsMap[MissionName].first);
 
@@ -47,11 +51,7 @@ inline void toc(const string& MissionName)
     callCountMap[MissionName] -= 1;
 }
 
-inline bool value_comparator(const pair<string, size_t>& a, const pair<string, size_t>& b) {
-    return a.second > b.second;
-}
-
-inline void printAllTimes()
+inline void tictoc()
 {
     vector<pair<string, size_t>> durations(durationMap.begin(), durationMap.end());
     cout << endl << "Profiler: " << endl;
@@ -65,7 +65,9 @@ inline void printAllTimes()
         }
     }
 
-    sort(durations.begin(), durations.end(), value_comparator);
+    sort(durations.begin(), durations.end(), [](const pair<string, size_t>& a, const pair<string, size_t>& b) {
+        return a.second > b.second;
+    });
 
     int num = 1;
     for (const auto& i : durations)
@@ -78,5 +80,16 @@ inline void printAllTimes()
     }
 }
 
- 
+#define tic(name) tic(name)
+#define toc(name) toc(name)
+#define tictoc() tictoc()
+
+#else
+
+#define tic(name)
+#define toc(name)
+#define tictoc()
+
+#endif
+
 #endif

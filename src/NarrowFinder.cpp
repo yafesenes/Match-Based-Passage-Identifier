@@ -12,7 +12,6 @@ void NarrowFinder::calculatePassageValues()
     utils::getConnectedComponents(connectedComponents, this->_map);
 
     foreignMatcher(connectedComponents);
-    Renderer::instance().drawMatches(_passageValues);
 
     for (const Component& c : connectedComponents)
         ownMatcher(c);
@@ -23,10 +22,17 @@ void NarrowFinder::calculatePassageValues()
 void NarrowFinder::foreignMatcher(const std::vector<Component> &components)
 {
     tic("foreignMatcher");
-    std::vector<Component> borderizedComponents;
+    if (components.size() < 2)
+    {
+        toc("foreignMatcher");
+        return;
+    }
 
+    tic("foreign_borderize");
+    std::vector<Component> borderizedComponents;
     for (const auto& c : components)
-        borderizedComponents.push_back(borderizeComponent(c));
+        borderizedComponents.push_back(utils::borderizeComponent(c, _map, 1));
+    toc("foreign_borderize");
 
     // Kümelerin bounding box'larının elde edilmesi
     std::vector<Rect> boundingBoxes;
@@ -83,12 +89,69 @@ void NarrowFinder::foreignMatcher(const std::vector<Component> &components)
 void NarrowFinder::ownMatcher(const Component &component)
 {
     tic("ownMatcher");
-    std::vector<Component> components = utils::tearComponent(component);
-    foreignMatcher(components);
 
-    for (const auto& comp : components)
+    //recursion bitme koşulu
+    if (component.size() < 3)
     {
-        ownMatcher(comp);
+        toc("ownMatcher");
+        return;
+    }
+
+//  1- Componenti içerecek en küçük map'in oluşturulması
+    Convex compConvex = utils::ConvexHull(component);
+
+    Rect rectCoords = utils::ComponentToRect(compConvex);
+    Map rectMap(rectCoords.second.y - rectCoords.first.y + 1, std::vector<bool>(rectCoords.second.x - rectCoords.first.x + 1, 0));
+
+    for (const auto& p : component)
+        rectMap[p.y - rectCoords.first.y][p.x - rectCoords.first.x] = 1;
+
+
+    for (int i=0; i<compConvex.size()-1; i++)
+    {
+        vector<Point> midPoints = utils::bresenham(compConvex[i],compConvex[i+1]);
+
+        for (const auto& p : midPoints)
+            rectMap[p.y - rectCoords.first.y][p.x - rectCoords.first.x] = 1;
+    }
+
+//    2- Rectmap içerisinde free spacelerin cluster edilmesi
+    std::vector<Component> freeSpaceComponents;
+    utils::getConnectedComponents(freeSpaceComponents, rectMap, 0, 4, rectCoords.first);
+
+//    3- Freespacelerin convexlerinin bulunması
+    for (const auto& freeSpaceComponent : freeSpaceComponents)
+    {
+        if (!utils::isInsideConvex(compConvex, freeSpaceComponent[0])) {
+            continue;
+        }
+        if (freeSpaceComponent.size() < 3) {
+            continue;
+        }
+
+        Component borderedFreeComp = utils::borderizeComponent(freeSpaceComponent, _map, 0);
+        Convex freeConvex = utils::ConvexHull(borderedFreeComp);
+
+        pair<vector<Point>, vector<Point>> PolygonPoints;
+        utils::ClusterConvexPolygon(freeConvex, component, PolygonPoints);
+
+        if (PolygonPoints.second.empty())
+            continue;
+
+        Map insidePointMap(rectCoords.second.y - rectCoords.first.y + 1, std::vector<bool>(rectCoords.second.x - rectCoords.first.x + 1, 0));
+        for (const auto& p : PolygonPoints.second)
+            insidePointMap[p.y - rectCoords.first.y][p.x - rectCoords.first.x] = 1;
+
+        std::vector<Component> insideComponents;
+        utils::getConnectedComponents(insideComponents, insidePointMap, 1, 8, rectCoords.first);
+
+        if (!PolygonPoints.first.empty())
+            foreignMatcher({PolygonPoints.first, PolygonPoints.second});
+
+        foreignMatcher(insideComponents);
+
+        for (const auto& comp : insideComponents)
+            ownMatcher(comp);
     }
 
     toc("ownMatcher");
@@ -121,56 +184,3 @@ void NarrowFinder::collisionCheck(const Point& p1, const Point& p2)
     }
     toc("collisionCheck");
 }
-
-Component NarrowFinder::borderizeComponent(const Component& component)
-{
-    tic("borderizeComponent");
-    std::vector<int> directionsX = {0, 1, 0, -1, 1, -1, 1, -1};
-    std::vector<int> directionsY = {1, 0, -1, 0, -1, 1, 1, -1};
-    std::vector<Point> newComponent;
-    std::mutex mtx;
-
-    auto processComponent = [&](int start, int end) {
-        std::vector<Point> localComponent;
-        for (int i = start; i < end; ++i)
-        {
-            auto& j = component[i];
-            for (size_t k = 0; k < directionsX.size(); k++)
-            {
-                int x = j.x + directionsX[k];
-                int y = j.y + directionsY[k];
-
-                if (y >= _map.size() || x >= _map[y].size() || x < 0 || y < 0)
-                    continue;
-
-                if (_map[y][x] == 0)
-                {
-                    localComponent.push_back(j);
-                    break;
-                }
-            }
-        }
-        std::lock_guard<std::mutex> lock(mtx);
-        newComponent.insert(newComponent.end(), localComponent.begin(), localComponent.end());
-    };
-
-    int numThreads = std::thread::hardware_concurrency()/2;
-    int blockSize = component.size() / numThreads;
-    std::vector<std::thread> threads;
-
-    for (int i = 0; i < numThreads; ++i)
-    {
-        int start = i * blockSize;
-        int end = (i == numThreads - 1) ? component.size() : start + blockSize;
-        threads.emplace_back(processComponent, start, end);
-    }
-
-    for (auto& thread : threads)
-    {
-        if (thread.joinable())
-            thread.join();
-    }
-    toc("borderizeComponent");
-    return newComponent;
-}
-

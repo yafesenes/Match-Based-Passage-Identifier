@@ -31,7 +31,7 @@ Map inflateMap(Map& map)
 
 Map loadMap()
 {
-    Image Img("res/Map2/2.png");
+    Image Img("res/Map2/willow.png");
     Map map = Img.getData();
 
     Map newMap = inflateMap(map);
@@ -39,18 +39,21 @@ Map loadMap()
     return newMap;
 }
 
-
 int main() {
     tic("main");
     Map map = loadMap();
 
     Renderer::instance().setMap(map);
 
-    NarrowFinder narrowFinder(map, 0.1);
+    auto start = std::chrono::high_resolution_clock::now();
+    NarrowFinder narrowFinder(map, 0.02);
     narrowFinder.calculatePassageValues();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start);
+    std::cout << duration.count() / 1000 << " milisaniye" << std::endl;
     toc("main");
-    printAllTimes();
+    tictoc();
 
+    Renderer::instance().drawMatches(narrowFinder.getPassageValues());
     Renderer::instance().run();
 
     return 0;

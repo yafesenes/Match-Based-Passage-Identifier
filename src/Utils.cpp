@@ -8,7 +8,8 @@ double utils::getDistance(const Point& p1, const Point& p2)
 void utils::getConnectedComponents(std::vector<Component> &connectedComponents,
                               const Map& map,
                               bool componentValue,
-                              int dir)
+                              int dir,
+                              Point refPoint)
 {
     tic("utils::getConnectedComponents");
     int rows = map.size();
@@ -42,7 +43,7 @@ void utils::getConnectedComponents(std::vector<Component> &connectedComponents,
         {
             int label = labels.at<int>(y, x);
             if(label > 0)
-                connectedComponents[label-1].push_back({x, y});
+                connectedComponents[label-1].push_back({x + refPoint.x, y+refPoint.y});
         }
     }
     toc("utils::getConnectedComponents");
@@ -88,4 +89,167 @@ std::vector<Point> utils::bresenham(Point p0, Point p1) {
 std::vector<Component> utils::tearComponent(const Component& c)
 {
     return {};
+}
+
+Rect  utils::ComponentToRect(const vector<Point> &Component)
+{
+    tic("ComponentToRect");
+    Point TopLeft = Component[0];
+    Point BotRight = Component[0];
+
+    for (const Point &p:Component)
+    {
+        if (p.x<TopLeft.x)
+            TopLeft.x = p.x;
+
+        if (p.y<TopLeft.y)
+            TopLeft.y = p.y;
+
+        if (p.x>BotRight.x)
+            BotRight.x = p.x;
+
+        if (p.y>BotRight.y)
+            BotRight.y = p.y;
+    }
+
+    toc("ComponentToRect");
+    return make_pair(TopLeft, BotRight);
+}
+
+Convex utils::ConvexHull(Component P) {
+    tic("ConvexHull");
+    int n = P.size(), k = 0;
+    Component H(2 * n);
+
+    // Sırala
+    std::sort(P.begin(), P.end(), compare);
+
+    // Alt dışbükey zarfı oluştur
+    for (int i = 0; i < n; ++i) {
+        while (k >= 2 && cross(H[k - 2], H[k - 1], P[i]) <= 0) k--;
+        H[k++] = P[i];
+    }
+
+    // Üst dışbükey zarfı oluştur
+    for (int i = n - 2, t = k + 1; i >= 0; i--) {
+        while (k >= t && cross(H[k - 2], H[k - 1], P[i]) <= 0) k--;
+        H[k++] = P[i];
+    }
+
+    H.resize(k - 1);
+
+    toc("ConvexHull");
+    return H;
+}
+
+bool utils::compare(Point p1, Point p2) {
+    return p1.x < p2.x || (p1.x == p2.x && p1.y < p2.y);
+}
+
+// Çapraz çarpımı hesaplamak için bir yardımcı fonksiyon
+int utils::cross(const Point &O, const Point &A, const Point &B) {
+    return (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
+}
+
+Component utils::borderizeComponent(const Component& component, const Map& occupancyMap, bool componentValue)
+{
+    tic("borderizeComponent");
+    std::vector<int> directionsX = {0, 1, 0, -1, 1, -1, 1, -1};
+    std::vector<int> directionsY = {1, 0, -1, 0, -1, 1, 1, -1};
+    std::vector<Point> newComponent;
+    std::mutex mtx;
+
+    auto processComponent = [&](int start, int end) {
+        std::vector<Point> localComponent;
+        for (int i = start; i < end; ++i)
+        {
+            auto& j = component[i];
+            for (size_t k = 0; k < directionsX.size(); k++)
+            {
+                int x = j.x + directionsX[k];
+                int y = j.y + directionsY[k];
+
+                if (y >= occupancyMap.size() || x >= occupancyMap[y].size() || x < 0 || y < 0)
+                    continue;
+
+                if (occupancyMap[y][x] == !componentValue)
+                {
+                    localComponent.push_back(j);
+                    break;
+                }
+            }
+        }
+        std::lock_guard<std::mutex> lock(mtx);
+        newComponent.insert(newComponent.end(), localComponent.begin(), localComponent.end());
+    };
+
+    int numThreads = std::thread::hardware_concurrency()/2;
+    int blockSize = component.size() / numThreads;
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < numThreads; ++i)
+    {
+        int start = i * blockSize;
+        int end = (i == numThreads - 1) ? component.size() : start + blockSize;
+        threads.emplace_back(processComponent, start, end);
+    }
+
+    for (auto& thread : threads)
+    {
+        if (thread.joinable())
+            thread.join();
+    }
+    toc("borderizeComponent");
+    return newComponent;
+}
+
+bool utils::isInsideConvex(const Convex &convexHull, const Point &point) {
+    tic("isInsideConvex");
+    size_t n = convexHull.size();
+    for (size_t i = 0; i < n; ++i) {
+        // Her üç ardışık nokta için çapraz çarpım hesapla
+        size_t j = (i + 1) % n;
+
+        // Eğer çapraz çarpım negatifse, nokta dışarıdadır.
+        if (cross(convexHull[i], convexHull[j], point) < 0) {
+            toc("isInsideConvex");
+            return false;
+        }
+    }
+    toc("isInsideConvex");
+    return true; // Tüm çapraz çarpımlar pozitifse, nokta içeridedir.
+}
+
+void utils::ClusterConvexPolygon(const vector<Point> &polygon, const vector<Point> &points, pair<vector<Point>, vector<Point>>& PolygonPoints)
+{
+    tic("ClusterConvexPolygon");
+    size_t n = polygon.size();
+
+    for(const Point &point : points) {
+        int sign = 0;
+        bool inside = true;
+
+        for(size_t i = 0; i < n; ++i) {
+            size_t j = (i + 1) % n;
+            int cp = cross(polygon[i], polygon[j], point);
+
+            if(cp == 0) continue; // Nokta kenarda olabilir
+
+            int newSign = (cp > 0) ? 1 : -1;
+
+            if(sign == 0) {
+                sign = newSign;
+            } else if(sign != newSign) {
+                inside = false;
+                break;
+            }
+        }
+
+        if(inside) {
+            PolygonPoints.second.push_back(point);
+        } else {
+            PolygonPoints.first.push_back(point);
+        }
+    }
+    toc("ClusterConvexPolygon");
 }
