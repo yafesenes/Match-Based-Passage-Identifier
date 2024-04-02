@@ -62,7 +62,6 @@ void rt::getIntersectingRects(std::vector<unsigned> &indexes, const Point &p, co
         if (result[i].second == compIndex)
             continue;
 
-        // cout << "j: " << j << " result: " << i.second << " comp_index: " << componentIndex << " result_size: " << result.size() << endl;
         indexes[j++] = result[i].second;
     }
 }
