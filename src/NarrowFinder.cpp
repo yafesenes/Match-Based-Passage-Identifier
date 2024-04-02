@@ -7,7 +7,6 @@ NarrowFinder::NarrowFinder(Map map, float threshold) : _map(std::move(map)), _th
 
 void NarrowFinder::calculatePassageValues()
 {
-    tic("calculatePassageValues");
     std::vector<Component> connectedComponents;
     utils::getConnectedComponents(connectedComponents, this->_map);
 
@@ -15,24 +14,18 @@ void NarrowFinder::calculatePassageValues()
 
     for (const Component& c : connectedComponents)
         ownMatcher(c);
-
-    toc("calculatePassageValues");
 }
 
 void NarrowFinder::foreignMatcher(const std::vector<Component> &components)
 {
-    tic("foreignMatcher");
     if (components.size() < 2)
     {
-        toc("foreignMatcher");
         return;
     }
 
-    tic("foreign_borderize");
     std::vector<Component> borderizedComponents;
     for (const auto& c : components)
         borderizedComponents.push_back(utils::borderizeComponent(c, _map, 1));
-    toc("foreign_borderize");
 
     // Kümelerin bounding box'larının elde edilmesi
     std::vector<Rect> boundingBoxes;
@@ -83,17 +76,13 @@ void NarrowFinder::foreignMatcher(const std::vector<Component> &components)
             indexes.clear();
         }
     }
-    toc("foreignMatcher");
 }
 
 void NarrowFinder::ownMatcher(const Component &component)
 {
-    tic("ownMatcher");
-
     //recursion bitme koşulu
     if (component.size() < 3)
     {
-        toc("ownMatcher");
         return;
     }
 
@@ -153,13 +142,10 @@ void NarrowFinder::ownMatcher(const Component &component)
         for (const auto& comp : insideComponents)
             ownMatcher(comp);
     }
-
-    toc("ownMatcher");
 }
 
 void NarrowFinder::collisionCheck(const Point& p1, const Point& p2)
 {
-    tic("collisionCheck");
     vector<Point> midPoints = utils::bresenham(p1, p2);
     bool flag = 0;
     for (auto & midPoint : midPoints)
@@ -182,5 +168,4 @@ void NarrowFinder::collisionCheck(const Point& p1, const Point& p2)
             }
         }
     }
-    toc("collisionCheck");
 }

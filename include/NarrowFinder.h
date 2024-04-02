@@ -11,7 +11,6 @@
 #include "Utils.h"
 #include "Renderer.h"
 #include "RTree.h"
-#include "TicToc.h"
 
 class NarrowFinder {
 public:

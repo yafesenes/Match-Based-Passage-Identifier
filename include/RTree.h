@@ -7,7 +7,6 @@
 #include <boost/geometry/index/predicates.hpp>
 #include <boost/geometry/index/rtree.hpp>
 #include "Types.h"
-#include "TicToc.h"
 
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;

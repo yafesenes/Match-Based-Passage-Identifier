@@ -5,7 +5,6 @@
 #include <cmath>
 #include <opencv2/opencv.hpp>
 #include "Types.h"
-#include "TicToc.h"
 #include <thread>
 #include <mutex>
 
@@ -14,15 +13,15 @@ namespace utils {
     /**
      * @param p1
      * @param p2
-     * @return İki nokta arasındaki mesafeyi döndürür.
+     * @return returns distance between given points
      */
     double getDistance(const Point& p1, const Point& p2);
 
-    /** @brief Birbirine komşuluğu bulunan harita elemanlarını gruplar
-     * @param connectedComponents Sonuçlar içine yazılacak değişken
-     * @param map Kümelenecek harita
-     * @param componentValue Kümelenecek eleman türü (0: free space, 1: engel)
-     * @param dir Komşuluk yön sayısı
+    /** @brief clusters neighbor cells
+     * @param connectedComponents vector to fill
+     * @param map
+     * @param componentValue type of the cluster (0: free space, 1: engel)
+     * @param dir 8-dir or 4-dir
      */
     void getConnectedComponents(std::vector<Component> &connectedComponents,
                                   const Map& map,
@@ -34,7 +33,7 @@ namespace utils {
 
     std::vector<Component> tearComponent(const Component& c);
 
-    Rect ComponentToRect(const vector<Point> &Component);
+    Rect ComponentToRect(const std::vector<Point> &Component);
 
     Convex ConvexHull(Component P);
 
@@ -46,7 +45,7 @@ namespace utils {
 
     bool isInsideConvex(const std::vector<Point> &convexHull, const Point &point);
 
-    void ClusterConvexPolygon(const vector<Point> &polygon, const vector<Point> &points, pair<vector<Point>, vector<Point>>& PolygonPoints);
+    void ClusterConvexPolygon(const std::vector<Point> &polygon, const std::vector<Point> &points, std::pair<std::vector<Point>, std::vector<Point>>& PolygonPoints);
 
 }
 

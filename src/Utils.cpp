@@ -11,25 +11,21 @@ void utils::getConnectedComponents(std::vector<Component> &connectedComponents,
                               int dir,
                               Point refPoint)
 {
-    tic("utils::getConnectedComponents");
     int rows = map.size();
     int cols = map.empty() ? 0 : map[0].size();
 
-    // 8 bit unsigned integer tek kanal (grayscale) bir matris oluşturur.
     cv::Mat cvMap(rows, cols, CV_8UC1);
 
     for (int i = 0; i < rows; i++)
         for (int j = 0; j < cols; j++)
-            cvMap.at<uchar>(i, j) = map[i][j] * 255; // 1 değerlerini 255 yapar
+            cvMap.at<uchar>(i, j) = map[i][j] * 255;
 
-    // Kümelenecek değer 0 ise cvMap'i tersine çevir.
     if (componentValue == 0)
         cv::bitwise_not(cvMap, cvMap);
 
     cv::Mat labels, stats, centroids;
     int num_labels = cv::connectedComponentsWithStats(cvMap, labels, stats, centroids, dir, CV_32S, cv::CCL_DEFAULT);
 
-    // connectedComponents için alan ayır
     connectedComponents.resize(num_labels-1);
     for (int i = 0; i < connectedComponents.size(); i++)
     {
@@ -46,11 +42,9 @@ void utils::getConnectedComponents(std::vector<Component> &connectedComponents,
                 connectedComponents[label-1].push_back({x + refPoint.x, y+refPoint.y});
         }
     }
-    toc("utils::getConnectedComponents");
 }
 
 std::vector<Point> utils::bresenham(Point p0, Point p1) {
-    tic("utils::bresenham");
     std::vector<Point> line;
 
     int dx = std::abs(p1.x - p0.x);
@@ -81,19 +75,11 @@ std::vector<Point> utils::bresenham(Point p0, Point p1) {
             line.push_back(p0);
     }
 
-    toc("utils::bresenham");
     return line;
 }
 
-//TODO: It must be filled!
-std::vector<Component> utils::tearComponent(const Component& c)
+Rect  utils::ComponentToRect(const std::vector<Point> &Component)
 {
-    return {};
-}
-
-Rect  utils::ComponentToRect(const vector<Point> &Component)
-{
-    tic("ComponentToRect");
     Point TopLeft = Component[0];
     Point BotRight = Component[0];
 
@@ -112,25 +98,20 @@ Rect  utils::ComponentToRect(const vector<Point> &Component)
             BotRight.y = p.y;
     }
 
-    toc("ComponentToRect");
-    return make_pair(TopLeft, BotRight);
+    return std::make_pair(TopLeft, BotRight);
 }
 
 Convex utils::ConvexHull(Component P) {
-    tic("ConvexHull");
     int n = P.size(), k = 0;
     Component H(2 * n);
 
-    // Sırala
     std::sort(P.begin(), P.end(), compare);
 
-    // Alt dışbükey zarfı oluştur
     for (int i = 0; i < n; ++i) {
         while (k >= 2 && cross(H[k - 2], H[k - 1], P[i]) <= 0) k--;
         H[k++] = P[i];
     }
 
-    // Üst dışbükey zarfı oluştur
     for (int i = n - 2, t = k + 1; i >= 0; i--) {
         while (k >= t && cross(H[k - 2], H[k - 1], P[i]) <= 0) k--;
         H[k++] = P[i];
@@ -138,7 +119,6 @@ Convex utils::ConvexHull(Component P) {
 
     H.resize(k - 1);
 
-    toc("ConvexHull");
     return H;
 }
 
@@ -146,14 +126,12 @@ bool utils::compare(Point p1, Point p2) {
     return p1.x < p2.x || (p1.x == p2.x && p1.y < p2.y);
 }
 
-// Çapraz çarpımı hesaplamak için bir yardımcı fonksiyon
 int utils::cross(const Point &O, const Point &A, const Point &B) {
     return (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
 }
 
 Component utils::borderizeComponent(const Component& component, const Map& occupancyMap, bool componentValue)
 {
-    tic("borderizeComponent");
     std::vector<int> directionsX = {0, 1, 0, -1, 1, -1, 1, -1};
     std::vector<int> directionsY = {1, 0, -1, 0, -1, 1, 1, -1};
     std::vector<Point> newComponent;
@@ -199,30 +177,23 @@ Component utils::borderizeComponent(const Component& component, const Map& occup
         if (thread.joinable())
             thread.join();
     }
-    toc("borderizeComponent");
     return newComponent;
 }
 
 bool utils::isInsideConvex(const Convex &convexHull, const Point &point) {
-    tic("isInsideConvex");
     size_t n = convexHull.size();
     for (size_t i = 0; i < n; ++i) {
-        // Her üç ardışık nokta için çapraz çarpım hesapla
         size_t j = (i + 1) % n;
 
-        // Eğer çapraz çarpım negatifse, nokta dışarıdadır.
         if (cross(convexHull[i], convexHull[j], point) < 0) {
-            toc("isInsideConvex");
             return false;
         }
     }
-    toc("isInsideConvex");
-    return true; // Tüm çapraz çarpımlar pozitifse, nokta içeridedir.
+    return true;
 }
 
-void utils::ClusterConvexPolygon(const vector<Point> &polygon, const vector<Point> &points, pair<vector<Point>, vector<Point>>& PolygonPoints)
+void utils::ClusterConvexPolygon(const std::vector<Point> &polygon, const std::vector<Point> &points, std::pair<std::vector<Point>, std::vector<Point>>& PolygonPoints)
 {
-    tic("ClusterConvexPolygon");
     size_t n = polygon.size();
 
     for(const Point &point : points) {
@@ -233,7 +204,7 @@ void utils::ClusterConvexPolygon(const vector<Point> &polygon, const vector<Poin
             size_t j = (i + 1) % n;
             int cp = cross(polygon[i], polygon[j], point);
 
-            if(cp == 0) continue; // Nokta kenarda olabilir
+            if(cp == 0) continue;
 
             int newSign = (cp > 0) ? 1 : -1;
 
@@ -251,5 +222,4 @@ void utils::ClusterConvexPolygon(const vector<Point> &polygon, const vector<Poin
             PolygonPoints.first.push_back(point);
         }
     }
-    toc("ClusterConvexPolygon");
 }

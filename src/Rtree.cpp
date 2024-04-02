@@ -1,10 +1,8 @@
-#include <iostream>
 #include "RTree.h"
 
 
 Rect rt::getBoundingBox(const Component &component)
 {
-    tic("rt::getBoundingBox");
     Point TopLeft = component[0];
     Point BotRight = component[0];
 
@@ -23,13 +21,11 @@ Rect rt::getBoundingBox(const Component &component)
             BotRight.y = p.y;
     }
 
-    toc("rt::getBoundingBox");
     return {TopLeft, BotRight};
 }
 
 Rtree rt::createRtree(const std::vector<Rect> &boundingBoxes)
 {
-    tic("rt::createRtree");
     Rtree rtree;
     int i = 0;
 
@@ -39,14 +35,12 @@ Rtree rt::createRtree(const std::vector<Rect> &boundingBoxes)
         rtree.insert(std::make_pair(rectBox, i++));
     }
 
-    toc("rt::createRtree");
     return rtree;
 }
 
 void rt::getIntersectingRects(std::vector<unsigned> &indexes, const Point &p, const Rtree &rtree, unsigned compIndex,
                               int thresholdValue)
 {
-    tic("rt::getIntersectingRects");
     indexes.clear();
     Box queryBox(RPoint(p.x - thresholdValue,
                         p.y - thresholdValue),
@@ -58,7 +52,6 @@ void rt::getIntersectingRects(std::vector<unsigned> &indexes, const Point &p, co
 
     if (result.size() == 1)
     {
-        toc("rt::getIntersectingRects");
         return;
     }
 
@@ -72,5 +65,4 @@ void rt::getIntersectingRects(std::vector<unsigned> &indexes, const Point &p, co
         // cout << "j: " << j << " result: " << i.second << " comp_index: " << componentIndex << " result_size: " << result.size() << endl;
         indexes[j++] = result[i].second;
     }
-    toc("rt::getIntersectingRects");
 }
