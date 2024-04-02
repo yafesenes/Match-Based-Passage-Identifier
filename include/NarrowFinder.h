@@ -9,7 +9,6 @@
 #include <opencv2/opencv.hpp>
 #include "Types.h"
 #include "Utils.h"
-#include "Renderer.h"
 #include "RTree.h"
 
 class NarrowFinder {
