@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(NarrowPassageSampler)
+project(Match-Based-Passage-Identifier)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -16,5 +16,6 @@ file(GLOB_RECURSE SOURCE_FILES
         "${PROJECT_SOURCE_DIR}/src/*.cpp"
 )
 
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
-target_link_libraries (${PROJECT_NAME} ${Boost_LIBRARIES} ${OpenCV_LIBS})
+add_library(MBPI SHARED ${SOURCE_FILES})
+target_link_libraries (MBPI ${Boost_LIBRARIES} ${OpenCV_LIBS})
+

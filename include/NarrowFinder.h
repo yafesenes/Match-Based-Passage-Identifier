@@ -18,20 +18,10 @@ public:
     void calculatePassageValues();
     inline const PassageValues& getPassageValues() const { return _passageValues; }
 private:
-    /**
-     * @brief İçine borderize edilmiş component almalı.
-     * @param components Obstacle kümeleri
-     */
     void foreignMatcher(const std::vector<Component>& components);
 
-    /**
-     * @param component Obstacle kümesi
-     */
     void ownMatcher(const Component& component);
 
-    /**
-     * @brief Arasında engel bulunmayan eşleşmeleri kullanarak PassageValues hesaplar
-     */
     void collisionCheck(const Point& p1, const Point& p2);
 
 private:

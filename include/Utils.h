@@ -11,8 +11,6 @@
 namespace utils {
 
     /**
-     * @param p1
-     * @param p2
      * @return returns distance between given points
      */
     double getDistance(const Point& p1, const Point& p2);

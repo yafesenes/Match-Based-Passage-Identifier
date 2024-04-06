@@ -18,24 +18,19 @@ typedef bgi::rtree<Value, bgi::quadratic<16> > Rtree;
 
 namespace rt {
     /**
-     * @param component
-     * @return Kümenin çevreleyici en küçük dikdörtgenini döndürür.
+     * @return Returns the smallest enclosing rectangle of the component.
      */
     Rect getBoundingBox(const Component &component);
 
-    /**
-     * @param boundingBoxes Componentlerin dikdörtgen hali
-     * @return
-     */
     Rtree createRtree(const std::vector<Rect> &boundingBoxes);
 
     /**
-     * @brief Her obstacle biriminin eşleşeceği engelleri belirlemek için uygulanan ilk filtredir
-     * @param indexes İçi doldurulacak olan değişken
-     * @param p Etrafında querybox oluşturulacak olan nokta
-     * @param rtree Kesişmeleri öngörmek için kullanılan veri yapısı
-     * @param compIndex Eşleşme aranan kümenin indexi, kümenin kendisi index listesine kaydedilmemeli
-     * @param thresholdValue Querybox'ın büyüklüğünün ayarlanmasını sağlayan piksel sayısı
+     * @brief The first filter applied to determine the obstacles that each obstacle unit will match with
+     * @param indexes The variable to be filled
+     * @param p The point around which the querybox will be created
+     * @param rtree The data structure used for predicting intersections
+     * @param compIndex The index of the component being searched for matches, the component itself should not be recorded in the index list
+     * @param thresholdValue The number of pixels that adjusts the size of the querybox
      */
     void getIntersectingRects(std::vector<unsigned> &indexes, const Point &p, const Rtree &rtree, unsigned compIndex,
                               int thresholdValue);
