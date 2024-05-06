@@ -36,12 +36,9 @@ To use the MBPI in your project, include the library in your project's build scr
 
 Here is an example of how you might include it in your CMake project:
    ```cmake
-   # Assuming MBPI is installed in /usr/local
-   include_directories(/usr/local/include/MBPI)
-   link_directories(/usr/local/lib)
-
-   add_executable(your_project_name your_source_files.cpp)
-   target_link_libraries(your_project_name MBPI ${Boost_LIBRARIES} ${OpenCV_LIBS})
+   add_subdirectory(path/to/MBPI)
+   add_executable(your_project src/main.cpp)
+   target_link_libraries(your_project MBPI)
    ```
 
 ## Contributors
