@@ -1,4 +1,4 @@
-# Match-Based Passage Identifier
+# Match-Based Passage Identifier Algorithm
 
 ## Getting Started
 
